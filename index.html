@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#10182c">
+  <meta name="description" content="AION2の日課・週課を自分専用にチェック。開催イベントと交換商店もまとめて確認できます。">
+  <meta name="color-scheme" content="dark">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="stylesheet" href="./style.css">
+  <title>AION2 | 日課・週課チェックリスト</title>
+</head>
+<body>
+  <div class="ambient ambient-a" aria-hidden="true"></div>
+  <div class="ambient ambient-b" aria-hidden="true"></div>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top" aria-label="AION2 チェックリストの先頭へ">
+        <span class="brand-symbol" aria-hidden="true">✧</span>
+        <span class="brand-name">AION<span>2</span><small>CHECKLIST</small></span>
+      </a>
+      <div class="top-actions">
+        <span class="private-badge"><span aria-hidden="true">●</span> 端末内に保存</span>
+        <button type="button" class="btn btn-subtle settings-trigger" id="openSettings" aria-haspopup="dialog"><span aria-hidden="true">⚙</span> 設定・データ管理</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout" id="top">
+    <section class="intro" aria-labelledby="heroTitle">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="line-dot"></span> YOUR ADVENTURE ROUTINE</div>
+        <h1 id="heroTitle">やることを、<br><span>ひと目で。</span></h1>
+        <p>日課・週課・開催イベント・交換商店をひとつに。チェックは自分の端末だけに保存され、ほかの人には反映されません。</p>
+        <div class="hero-highlights">
+          <span>✓ 登録不要</span><span>✓ 個別にチェック</span><span>✓ オフライン対応*</span>
+        </div>
+      </div>
+      <div class="hero-decoration" aria-hidden="true"><div class="dec-circle circle-one"></div><div class="dec-circle circle-two"></div><div class="hero-rune">✦</div></div>
+    </section>
+
+    <section class="progress-grid" aria-label="達成状況">
+      <div class="progress-panel daily-progress">
+        <div class="progress-head"><div><span class="progress-caption">DAILY ROUTINE</span><h2>本日の日課</h2></div><span class="progress-figure" id="dailyCount">0 <small>/ 5</small></span></div>
+        <div class="track" role="progressbar" id="dailyBar" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0" aria-label="日課の進捗"><span id="dailyFill"></span></div>
+        <p class="progress-foot" id="dailySub">今日やることをチェックしよう</p>
+      </div>
+      <div class="progress-panel weekly-progress">
+        <div class="progress-head"><div><span class="progress-caption">WEEKLY ROUTINE</span><h2>今週の週課</h2></div><span class="progress-figure" id="weeklyCount">0 <small>/ 10</small></span></div>
+        <div class="track" role="progressbar" id="weeklyBar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" aria-label="週課の進捗"><span id="weeklyFill"></span></div>
+        <p class="progress-foot" id="weeklySub">今週の進み具合を確認</p>
+      </div>
+    </section>
+
+    <nav class="section-nav" aria-label="ページ内のメニュー">
+      <a href="#daily" class="nav-link"><span>01</span> 日課 <b id="navDaily">5</b></a>
+      <a href="#weekly" class="nav-link"><span>02</span> 週課 <b id="navWeekly">10</b></a>
+      <a href="#events" class="nav-link"><span>03</span> 開催イベント</a>
+      <a href="#shops" class="nav-link"><span>04</span> 交換商店</a>
+    </nav>
+
+    <div class="controls">
+      <label class="search-field" for="searchInput"><span aria-hidden="true">⌕</span><input type="search" id="searchInput" placeholder="コンテンツ・報酬・商店を検索" autocomplete="off"><kbd>検索</kbd></label>
+      <label class="filter-toggle"><input type="checkbox" id="unfinishedOnly"><span class="switch" aria-hidden="true"></span> 未完了のみ表示 <small>日課・週課</small></label>
+    </div>
+
+    <section class="list-section" id="daily" aria-labelledby="dailyHeading">
+      <div class="section-head"><div><span class="section-number">01 — DAILY</span><h2 id="dailyHeading">日課 <span>毎日やること</span></h2></div><button type="button" class="text-button" data-action="reset" data-scope="daily">日課のチェックを解除 ↺</button></div>
+      <div class="task-list" id="dailyTasks"></div>
+    </section>
+
+    <section class="list-section" id="weekly" aria-labelledby="weeklyHeading">
+      <div class="section-head"><div><span class="section-number">02 — WEEKLY</span><h2 id="weeklyHeading">週課 <span>毎週やること</span></h2></div><button type="button" class="text-button" data-action="reset" data-scope="weekly">週課のチェックを解除 ↺</button></div>
+      <div class="task-list" id="weeklyTasks"></div>
+    </section>
+
+    <section class="list-section" id="events" aria-labelledby="eventHeading">
+      <div class="section-head"><div><span class="section-number">03 — EVENTS</span><h2 id="eventHeading">開催イベント <span>時間限定・定期開催</span></h2></div></div>
+      <div class="event-list" id="eventsList"></div>
+    </section>
+
+    <section class="list-section" id="shops" aria-labelledby="shopHeading">
+      <div class="section-head"><div><span class="section-number">04 — EXCHANGE</span><h2 id="shopHeading">交換商店 <span>使い道と優先度</span></h2></div></div>
+      <div class="shop-grid" id="shopsList"></div>
+    </section>
+
+    <footer class="footer"><div><span class="footer-emblem">✧</span> AION2 ROUTINE TRACKER</div><p>チェックは利用中のブラウザにのみ保存されます。ブラウザのデータ削除・端末変更では引き継がれません。必要に応じて設定からバックアップしてください。</p><p>* オフラインで使うには、公開したページをオンラインで一度開く必要があります。ブラウザの設定により制限される場合があります。</p></footer>
+  </main>
+
+  <dialog id="settingsDialog" aria-labelledby="settingsTitle">
+    <div class="modal-body">
+      <div class="modal-header"><div><span class="section-number">PERSONAL SETTINGS</span><h2 id="settingsTitle">設定・データ管理</h2></div><button class="icon-close" type="button" id="closeSettings" aria-label="設定を閉じる">×</button></div>
+      <section class="modal-section"><h3>自動リセット</h3><p>ゲーム内の更新時刻とは連動しません。使用端末の現地時刻で、毎日0:00／毎週月曜日0:00を区切りにできます。</p><label class="setting-row"><span><strong>日課を自動リセット</strong><small>毎日 0:00（端末の時刻）</small></span><input type="checkbox" id="dailyAutoReset"></label><label class="setting-row"><span><strong>週課を自動リセット</strong><small>月曜日 0:00（端末の時刻）</small></span><input type="checkbox" id="weeklyAutoReset"></label></section>
+      <section class="modal-section"><h3>バックアップ・復元</h3><p>チェック状況をJSONファイルに保存・復元できます。端末間の自動同期はありません。</p><div class="modal-buttons"><button class="btn btn-primary" type="button" id="exportData">チェック状況を書き出す</button><button class="btn btn-outline" type="button" id="importData">バックアップを読み込む</button><input type="file" id="importFile" accept=".json,application/json" hidden></div></section>
+      <section class="modal-section last"><h3>チェックの一括解除</h3><p>日課・週課のチェックだけを解除します。本文などの情報は変更できません。</p><div class="modal-buttons"><button class="btn btn-outline" type="button" data-action="reset" data-scope="daily">日課を解除</button><button class="btn btn-outline" type="button" data-action="reset" data-scope="weekly">週課を解除</button></div></section>
+    </div>
+  </dialog>
+  <div role="status" aria-live="polite" class="toast" id="toast"></div>
+  <script src="./app.js" defer></script>
+</body>
+</html>

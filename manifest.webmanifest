@@ -1,0 +1,12 @@
+{
+  "name": "AION2 日課・週課チェックリスト",
+  "short_name": "AION2 日課週課",
+  "description": "個人のブラウザで管理するAION2の日課・週課・イベント・交換商店",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a1020",
+  "theme_color": "#10182c",
+  "lang": "ja",
+  "icons": [{"src":"./favicon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]
+}
