@@ -156,7 +156,7 @@ const SHOPS = [
 const STORE_KEY = 'aion2-personal-checks-v1';
 const RESET_HOUR = 16; // Device local time. Keep existing saved checks on upgrade.
 const IDS = new Set([...DAILY,...WEEKLY].map(t=>t.id));
-const DEFAULT_STATE = ()=>({checked:{},settings:{dailyAutoReset:false,weeklyAutoReset:false},dailyMarker:'',weeklyMarker:'',resetBoundaryVersion:2});
+const DEFAULT_STATE = ()=>({checked:{},settings:{dailyAutoReset:false,weeklyAutoReset:false},dailyMarker:'',weeklyMarker:'',resetBoundaryVersion:3});
 let state=loadState();
 let filterTerm='';
 let unfinishedOnly=false;
@@ -177,14 +177,14 @@ function loadState(){
     }
     fresh.dailyMarker=typeof saved.dailyMarker==='string'?saved.dailyMarker:'';
     fresh.weeklyMarker=typeof saved.weeklyMarker==='string'?saved.weeklyMarker:'';
-    fresh.resetBoundaryVersion=saved.resetBoundaryVersion===2?2:1;
+    fresh.resetBoundaryVersion=[2,3].includes(saved.resetBoundaryVersion)?saved.resetBoundaryVersion:1;
     return fresh;
   }catch{return DEFAULT_STATE();}
 }
 function saveState(){try {localStorage.setItem(STORE_KEY,JSON.stringify(state));return true;}catch{return false;}}
 function localDateString(date){return [date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-');}
-// Reset periods turn over at 16:00 in the visitor's local timezone.
-// Before 16:00, the current daily/weekly period belongs to the previous date.
+// Daily periods turn over each day at 16:00 in the visitor's local timezone.
+// Weekly periods turn over each Wednesday at 16:00 in the visitor's local timezone.
 function periodDate(date){
   const period=new Date(date.getFullYear(),date.getMonth(),date.getDate());
   if(date.getHours()<RESET_HOUR)period.setDate(period.getDate()-1);
@@ -192,18 +192,18 @@ function periodDate(date){
 }
 function dailyPeriodMarker(date){return localDateString(periodDate(date));}
 function weeklyMarker(date){
-  const monday=periodDate(date);
-  monday.setDate(monday.getDate()-(monday.getDay()+6)%7);
-  return localDateString(monday);
+  const wednesday=periodDate(date);
+  wednesday.setDate(wednesday.getDate()-(wednesday.getDay()+4)%7);
+  return localDateString(wednesday);
 }
 function clearChecks(scope){for(const t of scope==='daily'?DAILY:WEEKLY) delete state.checked[t.id];}
 function migrateResetBoundary(now){
-  if(state.resetBoundaryVersion===2)return;
-  // Preserve checks when users update from the old midnight boundary.
-  // The next 16:00 reset uses the updated period markers.
-  state.dailyMarker=dailyPeriodMarker(now);
+  if(state.resetBoundaryVersion===3)return;
+  // Preserve existing checks when migrating to the Wednesday 16:00 weekly boundary.
+  // Also migrate older midnight-based daily markers without clearing checks.
+  if(state.resetBoundaryVersion<2)state.dailyMarker=dailyPeriodMarker(now);
   state.weeklyMarker=weeklyMarker(now);
-  state.resetBoundaryVersion=2;
+  state.resetBoundaryVersion=3;
   saveState();
 }
 function enforceAutoReset(){
