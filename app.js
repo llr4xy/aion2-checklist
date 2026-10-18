@@ -154,8 +154,9 @@ const SHOPS = [
 ];
 
 const STORE_KEY = 'aion2-personal-checks-v1';
+const RESET_HOUR = 16; // Device local time. Keep existing saved checks on upgrade.
 const IDS = new Set([...DAILY,...WEEKLY].map(t=>t.id));
-const DEFAULT_STATE = ()=>({checked:{},settings:{dailyAutoReset:false,weeklyAutoReset:false},dailyMarker:'',weeklyMarker:''});
+const DEFAULT_STATE = ()=>({checked:{},settings:{dailyAutoReset:false,weeklyAutoReset:false},dailyMarker:'',weeklyMarker:'',resetBoundaryVersion:2});
 let state=loadState();
 let filterTerm='';
 let unfinishedOnly=false;
@@ -176,19 +177,43 @@ function loadState(){
     }
     fresh.dailyMarker=typeof saved.dailyMarker==='string'?saved.dailyMarker:'';
     fresh.weeklyMarker=typeof saved.weeklyMarker==='string'?saved.weeklyMarker:'';
+    fresh.resetBoundaryVersion=saved.resetBoundaryVersion===2?2:1;
     return fresh;
   }catch{return DEFAULT_STATE();}
 }
 function saveState(){try {localStorage.setItem(STORE_KEY,JSON.stringify(state));return true;}catch{return false;}}
 function localDateString(date){return [date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-');}
-function weeklyMarker(date){const monday=new Date(date.getFullYear(),date.getMonth(),date.getDate());monday.setDate(monday.getDate()-(monday.getDay()+6)%7);return localDateString(monday);}
+// Reset periods turn over at 16:00 in the visitor's local timezone.
+// Before 16:00, the current daily/weekly period belongs to the previous date.
+function periodDate(date){
+  const period=new Date(date.getFullYear(),date.getMonth(),date.getDate());
+  if(date.getHours()<RESET_HOUR)period.setDate(period.getDate()-1);
+  return period;
+}
+function dailyPeriodMarker(date){return localDateString(periodDate(date));}
+function weeklyMarker(date){
+  const monday=periodDate(date);
+  monday.setDate(monday.getDate()-(monday.getDay()+6)%7);
+  return localDateString(monday);
+}
 function clearChecks(scope){for(const t of scope==='daily'?DAILY:WEEKLY) delete state.checked[t.id];}
+function migrateResetBoundary(now){
+  if(state.resetBoundaryVersion===2)return;
+  // Preserve checks when users update from the old midnight boundary.
+  // The next 16:00 reset uses the updated period markers.
+  state.dailyMarker=dailyPeriodMarker(now);
+  state.weeklyMarker=weeklyMarker(now);
+  state.resetBoundaryVersion=2;
+  saveState();
+}
 function enforceAutoReset(){
-  const now=new Date(),today=localDateString(now),week=weeklyMarker(now);
+  const now=new Date();
+  migrateResetBoundary(now);
+  const today=dailyPeriodMarker(now),week=weeklyMarker(now);
   let changed=false;
   if(state.settings.dailyAutoReset && state.dailyMarker!==today){clearChecks('daily');state.dailyMarker=today;changed=true;}
   if(state.settings.weeklyAutoReset && state.weeklyMarker!==week){clearChecks('weekly');state.weeklyMarker=week;changed=true;}
-  if(changed){saveState();renderTasks();showToast('新しい日課・週課の期間を確認しました');}
+  if(changed){saveState();renderTasks();showToast('16:00の更新に合わせてチェックをリセットしました');}
 }
 function detailMarkup(details){
   return details.map(d=>`<div class="detail-row"><span class="detail-label">${escapeHtml(d.label)}</span><div class="detail-content">${d.items ? `<div class="reward-items">${d.items.map(item=>`<span class="reward-item">${strContent(item)}</span>`).join('')}</div>`:strContent(d.text||'')}</div></div>`).join('');
@@ -265,7 +290,7 @@ function requestReset(scope){
   const label=scope==='daily'?'日課':'週課';
   if(!confirm(`${label}のチェックをすべて解除しますか？`))return;
   clearChecks(scope);
-  const now=new Date();if(scope==='daily')state.dailyMarker=localDateString(now);else state.weeklyMarker=weeklyMarker(now);
+  const now=new Date();if(scope==='daily')state.dailyMarker=dailyPeriodMarker(now);else state.weeklyMarker=weeklyMarker(now);
   saveState();renderTasks();showToast(`${label}のチェックを解除しました`);
 }
 function setupListeners(){
@@ -288,7 +313,7 @@ function setupListeners(){
     document.getElementById(`${scope}AutoReset`).addEventListener('change',e=>{
       state.settings[`${scope}AutoReset`]=e.target.checked;
       const now=new Date();
-      if(scope==='daily')state.dailyMarker=localDateString(now);else state.weeklyMarker=weeklyMarker(now);
+      if(scope==='daily')state.dailyMarker=dailyPeriodMarker(now);else state.weeklyMarker=weeklyMarker(now);
       saveState();showToast(e.target.checked?'自動リセットを有効にしました':'自動リセットを無効にしました');
     });
   }
@@ -308,14 +333,14 @@ function setupListeners(){
       const checked={};for(const [id,val] of Object.entries(backup.checked))if(IDS.has(id)&&typeof val==='boolean')checked[id]=val;
       if(!confirm('現在のチェック状態をバックアップの内容に置き換えますか？'))return;
       state.checked=checked;
-      const now=new Date();state.dailyMarker=localDateString(now);state.weeklyMarker=weeklyMarker(now);
+      const now=new Date();state.dailyMarker=dailyPeriodMarker(now);state.weeklyMarker=weeklyMarker(now);
       saveState();renderTasks();showToast('チェック状況を復元しました');dialog.close();
     }catch(err){showToast(`復元に失敗しました：${err.message}`);}
     finally{e.target.value='';}
   });
 }
 function start(){
-  const now=new Date();if(!state.dailyMarker)state.dailyMarker=localDateString(now);if(!state.weeklyMarker)state.weeklyMarker=weeklyMarker(now);
+  const now=new Date();if(!state.dailyMarker)state.dailyMarker=dailyPeriodMarker(now);if(!state.weeklyMarker)state.weeklyMarker=weeklyMarker(now);
   enforceAutoReset();renderTasks();renderReference();setupListeners();updateSettingsUI();saveState();
   setInterval(enforceAutoReset,60*1000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)enforceAutoReset();});

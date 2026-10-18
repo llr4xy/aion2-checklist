@@ -1,5 +1,5 @@
 /* Cache the site's public static files; personal checklist data never leaves localStorage. */
-const CACHE_NAME='aion2-routine-web-v1';
+const CACHE_NAME='aion2-routine-web-v2';
 const ASSETS=['./','./index.html','./style.css','./app.js','./favicon.svg','./manifest.webmanifest'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));
