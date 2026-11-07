@@ -138,8 +138,8 @@ const EVENTS = [
 const SHOPS = [
   {
     id:'festival',name:'フェスタ商店',currency:'100年ニンジンの証',access:'シューゴフェスタのページ → フェスタ商店',
-    wings:'紫花蝶の翼 ＜ 精霊の翼 ＜ 春花蝶の翼',wingPriority:'翼：優先度 高 ／ 右側ほど優先',
-    items:[{text:'ディーヴァニオン結晶',priority:'やや高'},{text:'スティグマシャード',priority:'やや高'},{text:'名画 など'}]
+    wings:'紫花蝶の翼 ＜ 精霊の翼 ＜ 春花蝶の翼',wingPriority:'翼：優先度 中 ／ 右側ほど優先',
+    items:[{text:'ディーヴァニオン結晶',priority:'高'},{text:'スティグマシャード',priority:'高'},{text:'名画 など',priority:'やや高'}]
   },
   {
     id:'abyss',name:'アビス商店',currency:'アビスポイント',access:'ESC → アビス → 交換商店',
